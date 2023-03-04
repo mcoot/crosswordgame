@@ -1,10 +1,13 @@
 import { boundsCheckSemiInclusive } from '../validation/bounds-checking';
 import { InvalidModelError } from '../validation/custom-errors';
 
-export class Grid {
+export class Grid implements Iterable<[string, [number, number]]> {
   #data: string[][];
 
   constructor(dimension: number, data: string[][]) {
+    if (!Number.isInteger(dimension) || dimension <= 0) {
+      throw new InvalidModelError(`grid dimension ${dimension} is not valid`);
+    }
     if (
       data.length !== dimension ||
       data.some((row) => row.length !== dimension)
@@ -16,7 +19,12 @@ export class Grid {
         'grid data contained non-single-character items',
       );
     }
-    this.#data = data;
+    // Store a copy of the data
+    this.#data = [...data.map((r) => [...r])];
+  }
+
+  get dimension() {
+    return this.#data.length;
   }
 
   get(row: number, col: number) {
@@ -27,7 +35,7 @@ export class Grid {
     );
     boundsCheckSemiInclusive(
       [0, this.#data[row].length],
-      row,
+      col,
       `invalid grid column coordinate ${col}`,
     );
     return this.#data[row][col];
@@ -37,10 +45,38 @@ export class Grid {
     return [...this.#data.map((r) => [...r])];
   }
 
+  *[Symbol.iterator](): Iterator<[string, [number, number]]> {
+    for (const [rowNum, row] of this.#data.entries()) {
+      for (const [colNum, cell] of row.entries()) {
+        yield [cell, [rowNum, colNum]];
+      }
+    }
+  }
+
+  some(f: (c: string, pos: [number, number]) => boolean) {
+    for (const [cell, pos] of this) {
+      if (f(cell, pos)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  all(f: (c: string, pos: [number, number]) => boolean) {
+    for (const [cell, pos] of this) {
+      if (!f(cell, pos)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static empty(dimension: number): Grid {
-    const data = Array<undefined>(dimension).map((_) =>
-      Array<undefined>(dimension).map((_) => ''),
-    );
+    if (!Number.isInteger(dimension) || dimension <= 0) {
+      throw new InvalidModelError(`grid dimension ${dimension} is not valid`);
+    }
+
+    const data = Array(dimension).fill(Array(dimension).fill(''));
     return new Grid(dimension, data);
   }
 }
