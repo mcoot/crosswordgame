@@ -8,3 +8,9 @@ export class CustomError extends Error {
 }
 
 export class InvalidModelError extends CustomError {}
+
+export class UnknownPlayerError extends CustomError {
+  constructor(player: string, cause?: Error) {
+    super(`unknown player ${player}`, cause);
+  }
+}

@@ -1,19 +1,22 @@
-import { InvalidModelError } from '../validation/custom-errors';
-import { Grid } from './Grid';
+import {
+  InvalidModelError,
+  UnknownPlayerError,
+} from '../validation/custom-errors';
+import { MutableGrid, Grid } from './Grid';
 
 type GameStatus = 'announcing' | 'placing' | 'complete';
 
 export class GameState {
-  #players: string[];
+  readonly players: string[];
   #currentAnnouncingPlayer: string;
   #currentGameStatus: GameStatus;
-  #grids: Record<string, Grid>;
+  #grids: Record<string, MutableGrid>;
 
   constructor(
     players: string[],
     currentAnnouncingPlayer: string,
     currentGameStatus: GameStatus,
-    grids: Record<string, Grid>,
+    grids: Record<string, MutableGrid>,
   ) {
     if (players.length === 0) {
       throw new InvalidModelError('cannot create game state with no players');
@@ -32,10 +35,26 @@ export class GameState {
       );
     }
 
-    this.#players = players;
+    this.players = players;
     this.#currentAnnouncingPlayer = currentAnnouncingPlayer;
     this.#currentGameStatus = currentGameStatus;
     this.#grids = { ...grids };
+  }
+
+  get currentAnnouncingPlayer(): string {
+    return this.#currentAnnouncingPlayer;
+  }
+
+  get currentGameStatus(): GameStatus {
+    return this.#currentGameStatus;
+  }
+
+  gridFor(player: string): Grid {
+    if (!this.players.includes(player)) {
+      throw new UnknownPlayerError(player);
+    }
+
+    return this.#grids[player];
   }
 
   static initial(players: string[], gridDimension: number): GameState {
@@ -43,8 +62,8 @@ export class GameState {
       throw new InvalidModelError('cannot create game state with no players');
     }
 
-    const grids: Record<string, Grid> = players.reduce(
-      (acc, p) => ({ ...acc, [p]: Grid.empty(gridDimension) }),
+    const grids: Record<string, MutableGrid> = players.reduce(
+      (acc, p) => ({ ...acc, [p]: MutableGrid.empty(gridDimension) }),
       {},
     );
 

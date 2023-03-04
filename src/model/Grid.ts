@@ -23,11 +23,11 @@ export class Grid implements Iterable<[string, [number, number]]> {
     this.#data = [...data.map((r) => [...r])];
   }
 
-  get dimension() {
+  get dimension(): number {
     return this.#data.length;
   }
 
-  get(row: number, col: number) {
+  get(row: number, col: number): string {
     boundsCheckSemiInclusive(
       [0, this.#data.length],
       row,
@@ -41,7 +41,7 @@ export class Grid implements Iterable<[string, [number, number]]> {
     return this.#data[row][col];
   }
 
-  raw() {
+  raw(): string[][] {
     return [...this.#data.map((r) => [...r])];
   }
 
@@ -53,7 +53,7 @@ export class Grid implements Iterable<[string, [number, number]]> {
     }
   }
 
-  some(f: (c: string, pos: [number, number]) => boolean) {
+  some(f: (c: string, pos: [number, number]) => boolean): boolean {
     for (const [cell, pos] of this) {
       if (f(cell, pos)) {
         return true;
@@ -62,7 +62,7 @@ export class Grid implements Iterable<[string, [number, number]]> {
     return false;
   }
 
-  all(f: (c: string, pos: [number, number]) => boolean) {
+  all(f: (c: string, pos: [number, number]) => boolean): boolean {
     for (const [cell, pos] of this) {
       if (!f(cell, pos)) {
         return false;
@@ -70,13 +70,15 @@ export class Grid implements Iterable<[string, [number, number]]> {
     }
     return true;
   }
+}
 
-  static empty(dimension: number): Grid {
+export class MutableGrid extends Grid {
+  static empty(dimension: number): MutableGrid {
     if (!Number.isInteger(dimension) || dimension <= 0) {
       throw new InvalidModelError(`grid dimension ${dimension} is not valid`);
     }
 
     const data = Array(dimension).fill(Array(dimension).fill(''));
-    return new Grid(dimension, data);
+    return new MutableGrid(dimension, data);
   }
 }
