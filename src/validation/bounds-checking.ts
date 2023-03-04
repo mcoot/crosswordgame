@@ -3,7 +3,7 @@ import { CustomError } from './custom-errors';
 export class BoundsCheckError extends CustomError {
   constructor(message: string, bounds: [number, number], value: number) {
     super(
-      `${message}: bounds check error, ${value} not in bounds ${bounds[0]},${bounds[1]}`,
+      `${message}: bounds check error: ${value} not in bounds ${bounds[0]},${bounds[1]}`,
     );
   }
 }

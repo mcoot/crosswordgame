@@ -14,10 +14,8 @@ parserOptions:
   project: './tsconfig.json'
 plugins:
   - '@typescript-eslint'
+  - jest
 rules:
-  '@typescript-eslint/no-unused-vars':
-    - warn
-    - argsIgnorePattern: '^_'
   indent:
     - error
     - 2
@@ -33,3 +31,16 @@ rules:
   eqeqeq:
     - error
     - always
+  '@typescript-eslint/no-unused-vars':
+    - warn
+    - argsIgnorePattern: '^_'
+  'jest/consistent-test-it':
+    - error
+    - fn: it
+      withinDescribe: it
+  'jest/prefer-todo':
+    - error
+  'jest/require-top-level-describe':
+    - error
+  'jest/valid-expect':
+    - error
