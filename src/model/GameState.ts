@@ -4,7 +4,38 @@ import {
 } from '../validation/custom-errors';
 import { MutableGrid, Grid } from './Grid';
 
-type GameStatus = 'announcing' | 'placing' | 'complete';
+export class AnnouncingGameStatus {
+  readonly status = 'announcing' as const;
+}
+
+export class PlacingGameStatus {
+  readonly status = 'placing' as const;
+  readonly letterToPlace: string;
+  readonly playersComplete: Set<string>;
+
+  constructor(letterToPlace: string, playersComplete: string[] = []) {
+    if (letterToPlace.length !== 1) {
+      throw new InvalidModelError(
+        'letter to place may only be a single character',
+      );
+    }
+    this.letterToPlace = letterToPlace;
+    this.playersComplete = new Set(playersComplete);
+  }
+
+  markPlayerComplete(player: string): void {
+    this.playersComplete.add(player);
+  }
+}
+
+export class CompleteGameStatus {
+  readonly status = 'complete' as const;
+}
+
+export type GameStatus =
+  | AnnouncingGameStatus
+  | PlacingGameStatus
+  | CompleteGameStatus;
 
 export class GameState {
   readonly players: string[];
@@ -67,6 +98,11 @@ export class GameState {
       {},
     );
 
-    return new GameState(players, players[0], 'announcing', grids);
+    return new GameState(
+      players,
+      players[0],
+      new AnnouncingGameStatus(),
+      grids,
+    );
   }
 }
