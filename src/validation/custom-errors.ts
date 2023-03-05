@@ -3,6 +3,7 @@ export class CustomError extends Error {
 
   constructor(message: string, cause?: Error) {
     super(message);
+    this.message = `${this.constructor.name}: ${this.message}`;
     this.cause = cause;
   }
 }
@@ -14,3 +15,5 @@ export class UnknownPlayerError extends CustomError {
     super(`unknown player ${player}`, cause);
   }
 }
+
+export class GameLogicError extends CustomError {}

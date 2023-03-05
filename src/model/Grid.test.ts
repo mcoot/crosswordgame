@@ -1,6 +1,6 @@
 import { BoundsCheckError } from '../validation/bounds-checking';
 import { InvalidModelError } from '../validation/custom-errors';
-import { Grid, MutableGrid } from './Grid';
+import { Grid } from './Grid';
 
 describe('model/Grid', () => {
   describe('Grid', () => {
@@ -86,19 +86,75 @@ describe('model/Grid', () => {
         expect(grid.dimension).toBe(3);
       });
 
-      describe('get', () => {
+      describe('boundsCheck', () => {
         it('checks row bounds', () => {
-          expect(() => grid.get(-1, 1)).toThrowError(BoundsCheckError);
-          expect(() => grid.get(3, 1)).toThrowError(BoundsCheckError);
+          expect(() => grid.boundsCheck([-1, 1])).toThrowError(
+            BoundsCheckError,
+          );
+          expect(() => grid.boundsCheck([3, 1])).toThrowError(BoundsCheckError);
         });
 
         it('checks column bounds', () => {
-          expect(() => grid.get(1, -1)).toThrowError(BoundsCheckError);
-          expect(() => grid.get(1, 3)).toThrowError(BoundsCheckError);
+          expect(() => grid.boundsCheck([1, -1])).toThrowError(
+            BoundsCheckError,
+          );
+          expect(() => grid.boundsCheck([1, 3])).toThrowError(BoundsCheckError);
+        });
+
+        it('allows in-bounds', () => {
+          expect(() => grid.boundsCheck([0, 0])).not.toThrow();
+          expect(() => grid.boundsCheck([1, 1])).not.toThrow();
+          expect(() => grid.boundsCheck([2, 2])).not.toThrow();
+        });
+      });
+
+      describe('get', () => {
+        it('checks row bounds', () => {
+          expect(() => grid.get([-1, 1])).toThrowError(BoundsCheckError);
+          expect(() => grid.get([3, 1])).toThrowError(BoundsCheckError);
+        });
+
+        it('checks column bounds', () => {
+          expect(() => grid.get([1, -1])).toThrowError(BoundsCheckError);
+          expect(() => grid.get([1, 3])).toThrowError(BoundsCheckError);
         });
 
         it('returns the correct cell', () => {
-          expect(grid.get(1, 1)).toBe('e');
+          expect(grid.get([1, 1])).toBe('e');
+        });
+      });
+
+      describe('place', () => {
+        let grid: Grid;
+        beforeEach(() => {
+          grid = new Grid(3, [
+            ['', '', ''],
+            ['', 'a', ''],
+            ['', '', ''],
+          ]);
+        });
+
+        it('checks bounds', () => {
+          expect(() => grid.place('b', [5, 5])).toThrowError(BoundsCheckError);
+        });
+
+        it('fails if multi-character string provided', () => {
+          expect(() => grid.place('potato', [0, 0])).toThrowError(
+            InvalidModelError,
+          );
+        });
+
+        it('fails if empty string is provided', () => {
+          expect(() => grid.place('', [0, 0])).toThrowError(InvalidModelError);
+        });
+
+        it('fails if position is not presently empty', () => {
+          expect(() => grid.place('b', [1, 1])).toThrowError(InvalidModelError);
+        });
+
+        it('sets letter for cell', () => {
+          expect(() => grid.place('b', [0, 0])).not.toThrow();
+          expect(grid.get([0, 0])).toBe('b');
         });
       });
 
@@ -110,7 +166,7 @@ describe('model/Grid', () => {
         it('is a deep copy', () => {
           const rawGrid = grid.raw();
           rawGrid[0][0] = 'lol';
-          expect(grid.get(0, 0)).toBe('a');
+          expect(grid.get([0, 0])).toBe('a');
         });
       });
 
@@ -144,17 +200,15 @@ describe('model/Grid', () => {
         });
       });
     });
-  });
 
-  describe('MutableGrid', () => {
-    describe('instance methods', () => {
+    describe('static methods', () => {
       describe('empty', () => {
         it('fails if construction fails', () => {
-          expect(() => MutableGrid.empty(2.5)).toThrowError(InvalidModelError);
+          expect(() => Grid.empty(2.5)).toThrowError(InvalidModelError);
         });
 
         it('creates empty grid of expected dimension', () => {
-          const result = MutableGrid.empty(3);
+          const result = Grid.empty(3);
           expect(result.dimension).toBe(3);
 
           expect(result.all((c) => c === '')).toBe(true);

@@ -1,8 +1,9 @@
 import {
+  GameLogicError,
   InvalidModelError,
   UnknownPlayerError,
 } from '../validation/custom-errors';
-import { MutableGrid, Grid } from './Grid';
+import { Grid } from './Grid';
 
 export class AnnouncingGameStatus {
   readonly status = 'announcing' as const;
@@ -41,13 +42,13 @@ export class GameState {
   readonly players: string[];
   #currentAnnouncingPlayer: string;
   #currentGameStatus: GameStatus;
-  #grids: Record<string, MutableGrid>;
+  #grids: Record<string, Grid>;
 
   constructor(
     players: string[],
     currentAnnouncingPlayer: string,
     currentGameStatus: GameStatus,
-    grids: Record<string, MutableGrid>,
+    grids: Record<string, Grid>,
   ) {
     if (players.length === 0) {
       throw new InvalidModelError('cannot create game state with no players');
@@ -88,13 +89,34 @@ export class GameState {
     return this.#grids[player];
   }
 
+  placeLetter(player: string, pos: [number, number]) {
+    if (this.currentGameStatus.status !== 'placing') {
+      throw new GameLogicError(
+        `attempting to place letter for player ${player} ` +
+          `while in ${this.currentGameStatus.status} state`,
+      );
+    }
+    if (!this.players.includes(player)) {
+      throw new UnknownPlayerError(player);
+    }
+    if (this.currentGameStatus.playersComplete.has(player)) {
+      throw new GameLogicError(
+        `cannot place twice for player ${player} this round`,
+      );
+    }
+
+    const grid = this.#grids[player];
+    grid.place(this.currentGameStatus.letterToPlace, pos);
+    this.currentGameStatus.markPlayerComplete(player);
+  }
+
   static initial(players: string[], gridDimension: number): GameState {
     if (players.length === 0) {
       throw new InvalidModelError('cannot create game state with no players');
     }
 
-    const grids: Record<string, MutableGrid> = players.reduce(
-      (acc, p) => ({ ...acc, [p]: MutableGrid.empty(gridDimension) }),
+    const grids: Record<string, Grid> = players.reduce(
+      (acc, p) => ({ ...acc, [p]: Grid.empty(gridDimension) }),
       {},
     );
 

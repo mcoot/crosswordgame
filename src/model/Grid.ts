@@ -1,7 +1,9 @@
 import { boundsCheckSemiInclusive } from '../validation/bounds-checking';
 import { InvalidModelError } from '../validation/custom-errors';
 
-export class Grid implements Iterable<[string, [number, number]]> {
+type GridLocation = [number, number];
+
+export class Grid implements Iterable<[string, GridLocation]> {
   #data: string[][];
 
   constructor(dimension: number, data: string[][]) {
@@ -23,11 +25,21 @@ export class Grid implements Iterable<[string, [number, number]]> {
     this.#data = [...data.map((r) => [...r])];
   }
 
+  static empty(dimension: number): Grid {
+    if (!Number.isInteger(dimension) || dimension <= 0) {
+      throw new InvalidModelError(`grid dimension ${dimension} is not valid`);
+    }
+
+    const data = Array(dimension).fill(Array(dimension).fill(''));
+    return new Grid(dimension, data);
+  }
+
   get dimension(): number {
     return this.#data.length;
   }
 
-  get(row: number, col: number): string {
+  boundsCheck(pos: [number, number]) {
+    const [row, col] = pos;
     boundsCheckSemiInclusive(
       [0, this.#data.length],
       row,
@@ -38,14 +50,33 @@ export class Grid implements Iterable<[string, [number, number]]> {
       col,
       `invalid grid column coordinate ${col}`,
     );
+  }
+
+  get(pos: [number, number]): string {
+    const [row, col] = pos;
+    this.boundsCheck(pos);
     return this.#data[row][col];
+  }
+
+  place(letter: string, pos: [number, number]) {
+    this.boundsCheck(pos);
+    const [row, col] = pos;
+
+    if (letter.length !== 1) {
+      throw new InvalidModelError('cannot place non-single-character string');
+    }
+    if (this.get(pos) !== '') {
+      throw new InvalidModelError('cannot place over existing placed letter');
+    }
+
+    this.#data[row][col] = letter;
   }
 
   raw(): string[][] {
     return [...this.#data.map((r) => [...r])];
   }
 
-  *[Symbol.iterator](): Iterator<[string, [number, number]]> {
+  *[Symbol.iterator](): Iterator<[string, GridLocation]> {
     for (const [rowNum, row] of this.#data.entries()) {
       for (const [colNum, cell] of row.entries()) {
         yield [cell, [rowNum, colNum]];
@@ -53,7 +84,7 @@ export class Grid implements Iterable<[string, [number, number]]> {
     }
   }
 
-  some(f: (c: string, pos: [number, number]) => boolean): boolean {
+  some(f: (c: string, pos: GridLocation) => boolean): boolean {
     for (const [cell, pos] of this) {
       if (f(cell, pos)) {
         return true;
@@ -62,23 +93,12 @@ export class Grid implements Iterable<[string, [number, number]]> {
     return false;
   }
 
-  all(f: (c: string, pos: [number, number]) => boolean): boolean {
+  all(f: (c: string, pos: GridLocation) => boolean): boolean {
     for (const [cell, pos] of this) {
       if (!f(cell, pos)) {
         return false;
       }
     }
     return true;
-  }
-}
-
-export class MutableGrid extends Grid {
-  static empty(dimension: number): MutableGrid {
-    if (!Number.isInteger(dimension) || dimension <= 0) {
-      throw new InvalidModelError(`grid dimension ${dimension} is not valid`);
-    }
-
-    const data = Array(dimension).fill(Array(dimension).fill(''));
-    return new MutableGrid(dimension, data);
   }
 }

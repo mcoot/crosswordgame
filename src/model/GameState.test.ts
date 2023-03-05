@@ -7,7 +7,7 @@ import {
   GameState,
   PlacingGameStatus,
 } from './GameState';
-import { MutableGrid } from './Grid';
+import { Grid } from './Grid';
 
 describe('model/GameState', () => {
   describe('PlacingGameStatus', () => {
@@ -36,9 +36,9 @@ describe('model/GameState', () => {
               'p4',
               new AnnouncingGameStatus(),
               {
-                p1: MutableGrid.empty(5),
-                p2: MutableGrid.empty(5),
-                p3: MutableGrid.empty(5),
+                p1: Grid.empty(5),
+                p2: Grid.empty(5),
+                p3: Grid.empty(5),
               },
             ),
         ).toThrowError(InvalidModelError);
@@ -52,10 +52,10 @@ describe('model/GameState', () => {
               'p2',
               new AnnouncingGameStatus(),
               {
-                p1: MutableGrid.empty(5),
-                p2: MutableGrid.empty(5),
-                p3: MutableGrid.empty(5),
-                p4: MutableGrid.empty(5),
+                p1: Grid.empty(5),
+                p2: Grid.empty(5),
+                p3: Grid.empty(5),
+                p4: Grid.empty(5),
               },
             ),
         ).toThrowError(InvalidModelError);
@@ -69,8 +69,8 @@ describe('model/GameState', () => {
               'p2',
               new AnnouncingGameStatus(),
               {
-                p1: MutableGrid.empty(5),
-                p2: MutableGrid.empty(5),
+                p1: Grid.empty(5),
+                p2: Grid.empty(5),
               },
             ),
         ).toThrowError(InvalidModelError);
@@ -84,9 +84,9 @@ describe('model/GameState', () => {
               'p2',
               new AnnouncingGameStatus(),
               {
-                p1: MutableGrid.empty(5),
-                p2: MutableGrid.empty(5),
-                p3: MutableGrid.empty(5),
+                p1: Grid.empty(5),
+                p2: Grid.empty(5),
+                p3: Grid.empty(5),
               },
             ),
         ).not.toThrow();
@@ -137,6 +137,18 @@ describe('model/GameState', () => {
           // All empty since initial
           expect(grid.all((c) => c === '')).toBe(true);
         });
+      });
+
+      describe('placeLetter', () => {
+        it.todo('throws if not in placing mode');
+
+        it.todo('throws if invalid player provided');
+
+        it.todo('throws if player has already placed in this round');
+
+        it.todo('throws if placing out of bounds');
+
+        it.todo('places letter and marks player complete');
       });
     });
   });
