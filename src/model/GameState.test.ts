@@ -1,4 +1,6 @@
+import { BoundsCheckError } from '../validation/bounds-checking';
 import {
+  GameLogicError,
   InvalidModelError,
   UnknownPlayerError,
 } from '../validation/custom-errors';
@@ -140,15 +142,49 @@ describe('model/GameState', () => {
       });
 
       describe('placeLetter', () => {
-        it.todo('throws if not in placing mode');
+        beforeEach(() => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            { p1: Grid.empty(5), p2: Grid.empty(5) },
+          );
+        });
 
-        it.todo('throws if invalid player provided');
+        it('throws if not in placing mode', () => {
+          gameState = GameState.initial(['p1', 'p2'], 5);
+          expect(() => gameState.placeLetter('p1', [0, 0])).toThrow(
+            GameLogicError,
+          );
+        });
 
-        it.todo('throws if player has already placed in this round');
+        it('throws if invalid player provided', () => {
+          expect(() => gameState.placeLetter('potato', [0, 0])).toThrow(
+            UnknownPlayerError,
+          );
+        });
 
-        it.todo('throws if placing out of bounds');
+        it('throws if player has already placed in this round', () => {
+          gameState.placeLetter('p1', [0, 0]);
+          expect(() => gameState.placeLetter('p1', [1, 1])).toThrowError(
+            GameLogicError,
+          );
+        });
 
-        it.todo('places letter and marks player complete');
+        it('throws if placing out of bounds', () => {
+          expect(() => gameState.placeLetter('p1', [-1, -1])).toThrowError(
+            BoundsCheckError,
+          );
+        });
+
+        it('places letter and marks player complete', () => {
+          gameState.placeLetter('p1', [0, 0]);
+          expect(
+            (
+              gameState.currentGameStatus as PlacingGameStatus
+            ).playersComplete.has('p1'),
+          ).toBe(true);
+        });
       });
     });
   });
