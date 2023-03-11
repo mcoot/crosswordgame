@@ -86,6 +86,26 @@ describe('model/Grid', () => {
         expect(grid.dimension).toBe(3);
       });
 
+      describe('isFull', () => {
+        it('returns false when not full', () => {
+          grid = new Grid(3, [
+            ['', 'b', 'c'],
+            ['d', 'e', 'f'],
+            ['g', 'h', ''],
+          ]);
+          expect(grid.isFull).toBe(false);
+        });
+
+        it('returns true when full', () => {
+          grid = new Grid(3, [
+            ['a', 'b', 'c'],
+            ['d', 'e', 'f'],
+            ['g', 'h', 'i'],
+          ]);
+          expect(grid.isFull).toBe(true);
+        });
+      });
+
       describe('boundsCheck', () => {
         it('checks row bounds', () => {
           expect(() => grid.boundsCheck([-1, 1])).toThrowError(

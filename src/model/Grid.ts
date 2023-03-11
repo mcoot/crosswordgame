@@ -38,6 +38,10 @@ export class Grid implements Iterable<[string, GridLocation]> {
     return this.#data.length;
   }
 
+  get isFull(): boolean {
+    return this.all((c) => c !== '');
+  }
+
   boundsCheck(pos: [number, number]) {
     const [row, col] = pos;
     boundsCheckSemiInclusive(
@@ -61,7 +65,6 @@ export class Grid implements Iterable<[string, GridLocation]> {
   place(letter: string, pos: [number, number]) {
     this.boundsCheck(pos);
     const [row, col] = pos;
-
     if (letter.length !== 1) {
       throw new InvalidModelError('cannot place non-single-character string');
     }

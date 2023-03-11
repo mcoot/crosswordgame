@@ -77,6 +77,11 @@ export class GameState {
     return this.#currentAnnouncingPlayer;
   }
 
+  nextAnnouncingPlayer(): string {
+    const curIdx = this.players.indexOf(this.currentAnnouncingPlayer);
+    return this.players[(curIdx + 1) % this.players.length];
+  }
+
   get currentGameStatus(): GameStatus {
     return this.#currentGameStatus;
   }
@@ -87,6 +92,10 @@ export class GameState {
     }
 
     return this.#grids[player];
+  }
+
+  get areGridsFull(): boolean {
+    return Object.values(this.#grids).every((g) => g.isFull);
   }
 
   placeLetter(player: string, pos: [number, number]) {
@@ -108,6 +117,46 @@ export class GameState {
     const grid = this.#grids[player];
     grid.place(this.currentGameStatus.letterToPlace, pos);
     this.currentGameStatus.markPlayerComplete(player);
+  }
+
+  processAnnouncement(announcedLetter: string) {
+    if (this.currentGameStatus.status !== 'announcing') {
+      throw new GameLogicError(
+        `attempting to process announcement while in ${this.currentGameStatus.status} state`,
+      );
+    }
+    if (announcedLetter.length !== 1) {
+      throw new InvalidModelError(
+        'letter to announce may only be a single character',
+      );
+    }
+
+    this.#currentGameStatus = new PlacingGameStatus(announcedLetter);
+  }
+
+  // Slightly weird coupling of logic to the controller here
+  // given the model could automatically move once the last player is marked
+  // but going ahead with this for time, can correct the modelling later
+  finishPlacement() {
+    if (this.currentGameStatus.status !== 'placing') {
+      throw new GameLogicError(
+        `cannot finish placement while in ${this.currentGameStatus.status} state`,
+      );
+    }
+    if (this.currentGameStatus.playersComplete.size < this.players.length) {
+      throw new GameLogicError(
+        'cannot finish placement when not all players have placed',
+      );
+    }
+
+    this.#currentAnnouncingPlayer = this.nextAnnouncingPlayer();
+
+    // If grids are now full, the game should transition to complete
+    if (this.areGridsFull) {
+      this.#currentGameStatus = new CompleteGameStatus();
+    } else {
+      this.#currentGameStatus = new AnnouncingGameStatus();
+    }
   }
 
   static initial(players: string[], gridDimension: number): GameState {

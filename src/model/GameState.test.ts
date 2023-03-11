@@ -127,6 +127,22 @@ describe('model/GameState', () => {
         gameState = GameState.initial(['p1', 'p2', 'p3'], 5);
       });
 
+      describe('nextAnnouncingPlayer', () => {
+        it('returns the next player in the list', () => {
+          expect(gameState.nextAnnouncingPlayer()).toBe('p2');
+        });
+
+        it('wraps back to the first player', () => {
+          gameState = new GameState(
+            ['p1', 'p2', 'p3'],
+            'p3',
+            new PlacingGameStatus('a', []),
+            { p1: Grid.empty(2), p2: Grid.empty(2), p3: Grid.empty(2) },
+          );
+          expect(gameState.nextAnnouncingPlayer()).toBe('p1');
+        });
+      });
+
       describe('gridFor', () => {
         it('throws if unknown player given', () => {
           expect(() => gameState.gridFor('p4')).toThrowError(
@@ -138,6 +154,56 @@ describe('model/GameState', () => {
           const grid = gameState.gridFor('p2');
           // All empty since initial
           expect(grid.all((c) => c === '')).toBe(true);
+        });
+      });
+
+      describe('areGridsFull', () => {
+        it('returns false when all grids are non-full', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            { p1: Grid.empty(2), p2: Grid.empty(2) },
+          );
+          expect(gameState.areGridsFull).toBe(false);
+        });
+
+        it('returns false when one grid is non-full', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            {
+              p1: new Grid(2, [
+                ['a', 'b'],
+                ['c', 'd'],
+              ]),
+              p2: new Grid(2, [
+                ['a', ''],
+                ['c', 'd'],
+              ]),
+            },
+          );
+          expect(gameState.areGridsFull).toBe(false);
+        });
+
+        it('returns true when all grids are full', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            {
+              p1: new Grid(2, [
+                ['a', 'b'],
+                ['c', 'd'],
+              ]),
+              p2: new Grid(2, [
+                ['a', 'b'],
+                ['c', 'd'],
+              ]),
+            },
+          );
+          expect(gameState.areGridsFull).toBe(true);
         });
       });
 
@@ -184,6 +250,107 @@ describe('model/GameState', () => {
               gameState.currentGameStatus as PlacingGameStatus
             ).playersComplete.has('p1'),
           ).toBe(true);
+        });
+      });
+
+      describe('processAnnouncement', () => {
+        it('throws if not in announcing state', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            { p1: Grid.empty(5), p2: Grid.empty(5) },
+          );
+
+          expect(() => gameState.processAnnouncement('a')).toThrowError(
+            GameLogicError,
+          );
+        });
+
+        it('throws if announcement is empty', () => {
+          expect(() => gameState.processAnnouncement('')).toThrowError(
+            InvalidModelError,
+          );
+        });
+
+        it('throws if announcement is multiple characters', () => {
+          expect(() => gameState.processAnnouncement('aaa')).toThrowError(
+            InvalidModelError,
+          );
+        });
+
+        it('transitions status to placing', () => {
+          gameState.processAnnouncement('a');
+          expect(gameState.currentGameStatus.status).toBe('placing');
+        });
+      });
+
+      describe('finishPlacement', () => {
+        it('throws if not in placing mode', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new AnnouncingGameStatus(),
+            { p1: Grid.empty(5), p2: Grid.empty(5) },
+          );
+          expect(() => gameState.finishPlacement()).toThrowError(
+            GameLogicError,
+          );
+        });
+
+        it('throws if not all players have placed', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', []),
+            { p1: Grid.empty(5), p2: Grid.empty(5) },
+          );
+          expect(() => gameState.finishPlacement()).toThrowError(
+            GameLogicError,
+          );
+        });
+
+        it('moves to announcing state with next player', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', ['p1', 'p2']),
+            {
+              p1: new Grid(2, [
+                ['a', ''],
+                ['c', 'd'],
+              ]),
+              p2: new Grid(2, [
+                ['a', 'b'],
+                ['c', ''],
+              ]),
+            },
+          );
+          gameState.finishPlacement();
+
+          expect(gameState.currentGameStatus.status).toBe('announcing');
+          expect(gameState.currentAnnouncingPlayer).toBe('p2');
+        });
+
+        it('moves to complete if all grids are full', () => {
+          gameState = new GameState(
+            ['p1', 'p2'],
+            'p1',
+            new PlacingGameStatus('a', ['p1', 'p2']),
+            {
+              p1: new Grid(2, [
+                ['a', 'b'],
+                ['c', 'd'],
+              ]),
+              p2: new Grid(2, [
+                ['a', 'b'],
+                ['c', 'd'],
+              ]),
+            },
+          );
+          gameState.finishPlacement();
+
+          expect(gameState.currentGameStatus.status).toBe('complete');
         });
       });
     });
