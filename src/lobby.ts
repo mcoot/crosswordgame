@@ -1,8 +1,8 @@
-import { GameState } from '../model/GameState';
+import { GameState } from './model/GameState';
 
 const GAME_BOARD_DIMENSION = 5;
 
-export class Game {
+export class Lobby {
   #state: GameState;
 
   constructor(players: string[]) {
