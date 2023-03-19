@@ -1,43 +1,33 @@
-// Commands a player can issue within a lobby
-export enum CommandKind {
-  // For the leader, start the game
-  START_GAME = 'start_game',
-  // Announce a letter
-  ANNOUNCE = 'announce',
-  // Place the current announced letter
-  PLACE = 'place',
-  // Indicate a player is ready for scores to be revealed
-  READY_SHOW_SCORES = 'ready_show_scores',
-  // For the leader, reset the lobby
-  RESET_LOBBY = 'reset_lobby',
-  // Indicate a player is ready to continue play without a disconnected player
-  READY_CONTINUE_PLAY_WITHOUT_PLAYER = 'ready_continue_play_without_player',
-}
-
+// For the leader, start the game
 interface StartGameCommand {
-  kind: CommandKind.START_GAME;
+  kind: 'start_game';
 }
 
+// Announce a letter
 interface AnnounceCommand {
-  kind: CommandKind.ANNOUNCE;
+  kind: 'announce';
   letter: string;
 }
 
+// Place the current announced letter
 interface PlaceCommand {
-  kind: CommandKind.PLACE;
+  kind: 'place';
   pos: [number, number];
 }
 
+// Indicate a player is ready for scores to be revealed
 interface ReadyShowScoresCommand {
-  kind: CommandKind.READY_SHOW_SCORES;
+  kind: 'ready_show_scores';
 }
 
+// For the leader, reset the lobby
 interface ResetLobbyCommand {
-  kind: CommandKind.RESET_LOBBY;
+  kind: 'reset_lobby';
 }
 
+// Indicate a player is ready to continue play without a disconnected player
 interface ReadyContinuePlayWithoutPlayerCommand {
-  kind: CommandKind.READY_CONTINUE_PLAY_WITHOUT_PLAYER;
+  kind: 'ready_continue_play_without_player';
 }
 
 export type Command =
